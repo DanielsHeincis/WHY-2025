@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Time-based Login Lockout</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; }
+    #status { margin-top: 1em; font-weight: bold; }
+    .success { color: green; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Login Page</h1>
+  <input id="username" type="text" placeholder="Username"><br><br>
+  <input id="password" type="password" placeholder="Password"><br><br>
+  <button onclick="login()">Login</button>
+  <div id="status"></div>
+
+  <script>
+    const CORRECT_USER = "admin";
+    const CORRECT_PASS = "1234";
+
+    let failedAttempts = 0;
+    let lockoutUntil = 0;
+
+    function login() {
+      const now = Date.now();
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+
+      if (now < lockoutUntil) {
+        const remaining = Math.ceil((lockoutUntil - now) / 1000);
+        document.getElementById('status').textContent = `❌ Locked out! Try again in ${remaining} seconds.`;
+        document.getElementById('status').className = "error";
+        return;
+      }
+
+      if (user === CORRECT_USER && pass === CORRECT_PASS) {
+        document.getElementById('status').textContent = "✅ Login successful!";
+        document.getElementById('status').className = "success";
+        failedAttempts = 0; // reset counter
+        return;
+      }
+
+      failedAttempts++;
+      if (failedAttempts >= 3) {
+        lockoutUntil = now + 30_000; // 30 seconds
+        document.getElementById('status').textContent = "❌ Too many attempts. Locked for 30 seconds.";
+        document.getElementById('status').className = "error";
+      } else {
+        document.getElementById('status').textContent = `❌ Login failed. (${failedAttempts} attempts)`;
+        document.getElementById('status').className = "error";
+      }
+    }
+
+    // Manual time warp function for testing
+    function warpTime(ms) {
+      const realNow = Date.now;
+      Date.now = () => realNow() + ms;
+    }
+  </script>
+</body>
+</html>
+
